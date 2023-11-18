@@ -111,33 +111,37 @@ def check_available( data ):
 def player_move():
     e = set_data( get_input(), PLAYER )
     while not e :
-        print("\nAlready occupied\n")
+        print(Fore.RED+"Already occupied"+Fore.RESET)
         e = set_data( get_input(), PLAYER )
     data = e
 
 def minmax( turn, depth ):
     global data
     result = check_winner()
-    if result == turn:
+    if result == AI:
         return 1
     elif result == DRAW :
         return 0
     elif result != BLANK:
         return -1
     
-    best = -100
-    best_option = None
-    
     options = check_available( data )
-    for option in options:
-        data = set_data( option, turn )
-        score = minmax( AI if turn == PLAYER else PLAYER, depth+1 )
-        if score > best:
-            best = score
-            best_option = option
-        data = set_data( option, BLANK )
-            
-    return score 
+    best = -100
+    if turn == AI:#max 
+        for option in options:
+            data = set_data( option, AI )
+            score = minmax( PLAYER , depth+1 )
+            best = max( score, best )
+            data = set_data( option, BLANK )
+    else:#min player
+        best = 100
+        for option in options:
+            data = set_data( option, PLAYER )
+            score = minmax( AI , depth+1 )
+            best = min( score, best )
+            data = set_data( option, BLANK )
+    if abs(best) > 1:  print(best)
+    return best 
 
     
 
@@ -175,7 +179,7 @@ def handle_game_over( result ):
 def game_loop():
     render()
     player_move()
-
+    print("player",data)
     winner = check_winner()
     if winner != BLANK: 
         # print(winner)
@@ -184,7 +188,7 @@ def game_loop():
             exit()
     
     ai_turn()
-
+    print("ai",data)
     winner = check_winner()
     if winner != BLANK: 
         print("winner  :  ",winner)
