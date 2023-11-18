@@ -1,4 +1,13 @@
 import random
+from tkinter import NORMAL
+import tkinter
+from colorama import Fore,Back,Style
+
+class My_style:
+    BOLD = "\033[1m"
+    NORMAL = "\033[0m"
+    HEADER = "\033[95m"
+    ENDC = "\033[0m"
 
 data = []
 PLAYER = "x" 
@@ -8,7 +17,7 @@ BLANK = " "
 
 def setup():
     print("\n\n")
-    ans = input("Ready To Play? ( y / n )     :")
+    ans = input(Fore.LIGHTBLUE_EX+"Ready To Play? ( y / n ) :  "+Fore.RESET)
     if not ans in ["Y","y"] :
         return False
     data.clear()
@@ -30,29 +39,28 @@ def render():
     print('  '+g+'  |   '+h+'  |  '+i+'  ')
     print("\n")
 
-
 def get_input():
-    r = input("Enter row ( 1 - 3 ):    ")
+    r = input(Fore.LIGHTYELLOW_EX+"Enter Row    ( 1 - 3 ):    "+Fore.RESET)
     try : 
         r = int(r)
     except:
         r=None
     while not r or not 1 <= int(r) <= 3:
-        print("Invalid input ")
-        r = input("Enter row ( 1 - 3 ):    ")
+        print(Fore.RED+"Invalid input "+Fore.RESET)
+        r = input(Fore.YELLOW+"Enter Row    ( 1 - 3 ):    "+Fore.RESET)
         try : 
             r = int(r)
         except:
             r=None
 
-    c = input("Enter Column ( 1 - 3 ):    ")
+    c = input(Fore.LIGHTCYAN_EX+"Enter Column ( 1 - 3 ):    "+Fore.RESET)
     try : 
-        c = int(r)
+        c = int(c)
     except:
         c=None
     while not c or not 1 <= int(c) <= 3:
-        print("Invalid input ")
-        c = input("Enter Column ( 1 - 3 ):    ")
+        print(Fore.RED+"Invalid input "+Fore.RESET)
+        c = input(Fore.CYAN+"Enter Column ( 1 - 3 ):    "+Fore.RESET)
         try : 
             c = int(c)
         except:
@@ -61,11 +69,16 @@ def get_input():
     return { "row": int(c) -1, "col": int(r) -1 }
 
 def set_data( inp, turn ):
-    if data[inp["row"]][inp["col"]] != BLANK :
-        return False
+    n_data = data.copy()
+    if turn == BLANK:
+        n_data[inp["row"]][inp["col"]] = BLANK
+        return n_data
+    if n_data[inp["row"]][inp["col"]] == BLANK :
+        n_data[inp["row"]][inp["col"]] = turn
+        return n_data
     else :
-        data[inp["row"]][inp["col"]] = turn
-        return True
+        return None
+        
 
 def check_winner():
     for i in range(3):#check rows
@@ -87,35 +100,77 @@ def check_winner():
             if data[i][j] == BLANK : return BLANK 
     return DRAW
 
+def check_available( data ):
+    options = []
+    for i in range(3):
+        for j in range(3):
+            if data[i][j] == BLANK : 
+                options.append( { "row": i, "col": j })
+    return options
+
 def player_move():
     e = set_data( get_input(), PLAYER )
     while not e :
         print("\nAlready occupied\n")
         e = set_data( get_input(), PLAYER )
+    data = e
 
+def minmax( turn, depth ):
+    global data
+    result = check_winner()
+    if result == turn:
+        return 1
+    elif result == DRAW :
+        return 0
+    elif result != BLANK:
+        return -1
+    
+    best = -100
+    best_option = None
+    
+    options = check_available( data )
+    for option in options:
+        data = set_data( option, turn )
+        score = minmax( AI if turn == PLAYER else PLAYER, depth+1 )
+        if score > best:
+            best = score
+            best_option = option
+        data = set_data( option, BLANK )
+            
+    return score 
+
+    
 
 def ai_turn():
-    options = []
-    for i in range(3):
-        for j in range(3):
-            if data[i][j] == BLANK : 
-                options.append( { "row": i, "col": j }) 
+    global data
+    options = check_available( data ) 
                 
     chosen = options[ random.randint(0, len(options)-1 ) ]
-    set_data( chosen, AI )
+    if len(options) >= 9 :
+        data = set_data( chosen, AI )
+        return
+    best = -100
+    for option in options:
+        data = set_data( option , AI)
+        score = minmax( PLAYER, 0 )
+        if score > best:
+            chosen = option
+            best = score
+        data = set_data( option , BLANK)
 
+    data = set_data( chosen, AI )
 
 def handle_game_over( result ):
     render() 
     print(' ____              __    __        __  __\n|   _  /\  |\  /| |__   |  | \  / |__ |__|\n\___| /  \ | \/ | |__   |__|  \/  |__ | \ ')
-    print("\n________________")
+    print(Back.LIGHTWHITE_EX)
     if result == PLAYER:
-        print("|  PLAYER won  |")
+        print(Fore.GREEN+"         ________________\n         |  PLAYER won  |")
     if result == AI:
-        print("|    AI won    |")
+        print(Fore.RED+"         ________________\n         |    AI won    |")
     if result == DRAW:
-        print("| Game is DRAW |")
-    print("‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾")
+        print(Fore.BLUE+"         ________________\n         | Game is DRAW |")
+    print("         ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾"+Back.RESET+Fore.RESET)
 
 def game_loop():
     render()
@@ -123,7 +178,7 @@ def game_loop():
 
     winner = check_winner()
     if winner != BLANK: 
-        print(winner)
+        # print(winner)
         handle_game_over( winner )
         if not setup() :
             exit()
@@ -137,11 +192,12 @@ def game_loop():
         if not setup() :
             exit()
     
-
 if __name__ == "__main__" :
+    print(Back.WHITE+Fore.BLACK+My_style.BOLD)
     print("        __      __   __         __   _____  __\n| /\ | |__ |   |    |  ||\  /| |__     |   |  |\n|/  \| |__ |__ |__  |__|| \/ | |__     |   |__|")
     print("_____    __    _____        __   _____  __   __\n  |   | |        |    /\   |       |   |  | |__\n  |   | |__      |   /  \  |__     |   |__| |__")
-    
+    print(Back.RESET+Fore.RESET)
+
     if not setup() : exit()
 
     while True:
