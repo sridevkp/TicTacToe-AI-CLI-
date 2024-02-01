@@ -1,6 +1,4 @@
 import random
-from tkinter import NORMAL
-import tkinter
 from colorama import Fore,Back,Style
 
 class My_style:
@@ -40,33 +38,28 @@ def render():
     print("\n")
 
 def get_input():
+
     r = input(Fore.LIGHTYELLOW_EX+"Enter Row    ( 1 - 3 ):    "+Fore.RESET)
-    try : 
-        r = int(r)
-    except:
-        r=None
-    while not r or not 1 <= int(r) <= 3:
-        print(Fore.RED+"Invalid input "+Fore.RESET)
+    while not is_input_valid(r):
+        warn("Invalid input ")
         r = input(Fore.YELLOW+"Enter Row    ( 1 - 3 ):    "+Fore.RESET)
-        try : 
-            r = int(r)
-        except:
-            r=None
+        
+    r = int(r)
 
-    c = input(Fore.LIGHTCYAN_EX+"Enter Column ( 1 - 3 ):    "+Fore.RESET)
-    try : 
-        c = int(c)
-    except:
-        c=None
-    while not c or not 1 <= int(c) <= 3:
-        print(Fore.RED+"Invalid input "+Fore.RESET)
+    c = input(Fore.LIGHTCYAN_EX+"Enter Column ( 1 - 3 ):    "+Fore.RESET)  
+    while not is_input_valid(c):
+        warn("Invalid input ")
         c = input(Fore.CYAN+"Enter Column ( 1 - 3 ):    "+Fore.RESET)
-        try : 
-            c = int(c)
-        except:
-            c=None
+        
+    c = int(c)
 
-    return { "row": int(c) -1, "col": int(r) -1 }
+    return { "row": r -1, "col": c -1 }
+
+def is_input_valid(val):
+    return val.isdigit() and 1 <= int(val) <= 3
+
+def warn(msg):
+    print(Fore.RED+msg+Fore.RESET) 
 
 def set_data( inp, turn ):
     n_data = data.copy()
@@ -79,7 +72,6 @@ def set_data( inp, turn ):
     else :
         return None
         
-
 def check_winner():
     for i in range(3):#check rows
         if data[i][0] == data[i][1] and data[i][0] == data[i][2]:
@@ -111,7 +103,7 @@ def check_available( data ):
 def player_move():
     e = set_data( get_input(), PLAYER )
     while not e :
-        print(Fore.RED+"Already occupied"+Fore.RESET)
+        warn("Already occupied")
         e = set_data( get_input(), PLAYER )
     data = e
 
@@ -176,10 +168,10 @@ def handle_game_over( result ):
         print(Fore.BLUE+"         ________________\n         | Game is DRAW |")
     print("         ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾"+Back.RESET+Fore.RESET)
 
-def game_loop():
+def game():
     render()
     player_move()
-    print("player",data)
+    # print("player",data)
     winner = check_winner()
     if winner != BLANK: 
         # print(winner)
@@ -188,7 +180,7 @@ def game_loop():
             exit()
     
     ai_turn()
-    print("ai",data)
+    # print("ai",data)
     winner = check_winner()
     if winner != BLANK: 
         print("winner  :  ",winner)
@@ -205,4 +197,4 @@ if __name__ == "__main__" :
     if not setup() : exit()
 
     while True:
-        game_loop()
+        game()
